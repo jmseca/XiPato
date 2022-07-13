@@ -6,6 +6,7 @@ It follows the following syntax: show [type] [limit] [order] [order_type]
 types
 - all
 - unseen
+- info (how many adds, and how many unseen)
 DEFAULT: all
 
 limit

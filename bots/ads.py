@@ -8,7 +8,11 @@ class CarAd:
         self.message_sent = False
         CarAd.id += 1
 
+    def __str__(self):
+        return "{}\nID:\t{}\n".format(self.url,self.id)
+
     def seen(self):
         self.seen = True
 
+    
     

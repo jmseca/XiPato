@@ -4,17 +4,18 @@ Author: João Fonseca
 Date: 12 July 2022
 """
 
-from click import command
+import time
 import requests
 from ads import *
-from doc_reader import *
+from classex import *
 
 
 class TelBot:
     headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
 
-    def __init__(self, api_key):
+    def __init__(self, api_key,parser):
         self.api_key = api_key
+        self.parser = parser
         self.updade_id = 0
         self.url = 'https://api.telegram.org/bot{}/'.format(self.api_key)
 
@@ -54,11 +55,32 @@ class TelBot:
         return updates
 
 
+    def send_to_command(self):
+        raise NotImplementedError
+
+    def polling(self,remove=True,from_id='all'):
+        while 1:
+            try:
+                updates = self.get_updates(remove,from_id)
+                for update in updates:
+                    parsed = self.parser.parse_input(update)
+                    if parsed[0] > 0:
+                        self.send_to_command(parsed[1])
+            except NotImplementedError as e:
+                raise e
+            except:
+                pass
+            time.sleep(5)
+            """Falta mudar este time para funcionar com as horas do dia"""
+
+    
+
+
 
 class PrivateTelBot(TelBot):
 
-    def __init__(self, api_key, client_id):
-        super().__init__(api_key)
+    def __init__(self, api_key, parser, client_id):
+        super().__init__(api_key, parser)
         self.client_id = client_id
 
     def send_message(self, message):
@@ -76,7 +98,7 @@ class XiPatoBot(PrivateTelBot):
 
 
     def __init__(self, api_key, client_id):
-        super().__init__(api_key,client_id)
+        super().__init__(api_key, XiPatoParser(), client_id)
         self.reader = XiPatoDocReader('xipato_bot_docs.txt')
         self.ads = []
 
@@ -104,6 +126,14 @@ class XiPatoBot(PrivateTelBot):
 
     # End Of commands documentation 
 
+    def show_command(self, ads):
+        if len(ads)>0:
+            message = ''
+            for ad in ads:
+                self.send_message(str(ad))
+        else:
+            self.send_message('Ads Not Found :(')
+            
 
     def add_new_ad(self,url):
         self.ads = [CarAd(url)]
