@@ -1,0 +1,34 @@
+SHOW 27
+== SHOW ==
+The 'show' command shows stored ads.
+It follows the following syntax: show [type] [limit] [order] [order_type]
+
+types
+- all
+- unseen
+DEFAULT: all
+
+limit
+- any natural number
+DEFAULT: 3
+
+order
+- price
+- roi
+- return
+DEFAULT: price
+
+order_type
+DEFAULT is ascending. To get descending add '-d'
+
+Example:
+show -> show the 3 cheapest ads, ascending
+show all 5 -> show 5 ads (seen and/or unseen)
+show unseen roi -d -> show the the 3 unseen ads with highest roi's
+
+HELP 4
+== HELP ==
+If you need help with some commands, send help <command>.
+Below are the commands available:
+
+
