@@ -55,7 +55,7 @@ class TelBot:
         return updates
 
 
-    def send_to_command(self):
+    def send_to_command(self,command, flags):
         raise NotImplementedError
 
     def polling(self,remove=True,from_id='all'):
@@ -65,7 +65,7 @@ class TelBot:
                 for update in updates:
                     parsed = self.parser.parse_input(update)
                     if parsed[0] > 0:
-                        self.send_to_command(parsed[1])
+                        self.send_to_command(parsed[1][0],parsed[1][1:])
             except NotImplementedError as e:
                 raise e
             except:
@@ -126,13 +126,41 @@ class XiPatoBot(PrivateTelBot):
 
     # End Of commands documentation 
 
-    def show_command(self, ads):
-        if len(ads)>0:
-            message = ''
-            for ad in ads:
-                self.send_message(str(ad))
+    def send_to_command(self,command, flags):
+        if command=='show':
+            self.show_command(flags)
+        # TODO
+
+    # == SHOW ==
+
+    def get_ads_by_show_type(self,type):
+        if type == 'all' or type=='':   #DEFAULT
+            return self.ads
+        elif type == 'unseen':
+            return list(filter(lambda x:not(x.seen),self.ads))
+
+    def get_sorted_ads(self, ads, sort_key, reverse):
+        if sort_key == 'return' or sort_key=='':  #DEFAULT
+            return ads.sort(key=lambda x:x.get_return(), reverse=reverse)
+        elif sort_key == 'roi':
+            return ads.sort(key=lambda x:x.get_roi(), reverse=reverse)
+        elif sort_key == 'price':
+            return ads.sort(key=lambda x:x.price, reverse=reverse)
+
+    def show_command(self, flags):
+        ascending = flags[3]==''
+        ads_num = 3 if flags[1]=='' else int(flags[1])
+        if flags[0]=='info':
+            self.send_ads_data()
         else:
-            self.send_message('Ads Not Found :(')
+            ads = self.get_ads_by_show_type(flags[0])
+            if len(ads)>0:
+                ads = self.get_sorted_ads(ads,flags[2],not(ascending))[:ads_num]
+                message = ''
+                for ad in ads:
+                    self.send_message(str(ad))
+            else:
+                self.send_message('Ads Not Found :(')
             
 
     def add_new_ad(self,url):

@@ -79,7 +79,7 @@ class XiPatoParser(Parser):
                 flags_ordered[1] = element
             elif element in ('price','roi','return'):
                 flags_ordered[2] = element
-            elif element=='-a':
+            elif element=='-d':
                 flags_ordered[3] = element
             else: #incorrect value
                 return []
