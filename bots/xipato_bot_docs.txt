@@ -17,7 +17,7 @@ order
 - price
 - roi
 - return
-DEFAULT: price
+DEFAULT: return
 
 order_type
 DEFAULT is ascending. To get descending add '-d'
