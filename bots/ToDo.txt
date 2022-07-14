@@ -1,0 +1,15 @@
+TODOs
+
+Comandos
+
+SET
+Definir algumas definicoes
+Exemplos:
+date : definir os sleeps do pooling
+
+STOP
+End ao pooling
+
+
+
+

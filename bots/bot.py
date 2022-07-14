@@ -8,6 +8,7 @@ import time
 import requests
 from ads import *
 from classex import *
+from utils import *
 
 
 class TelBot:
@@ -18,6 +19,16 @@ class TelBot:
         self.parser = parser
         self.updade_id = 0
         self.url = 'https://api.telegram.org/bot{}/'.format(self.api_key)
+        self.commands = [Help(self)]
+
+    def add_commands(self, *new_commands):
+        self.commands += new_commands
+
+    def get_commands(self, no_help=False):
+        if no_help:
+            return self.commands[1:] #assumes help is the [0]
+        else: 
+            return self.commands
 
     def send_message(self, message, client_id):
         url = self.url+'sendMessage'
@@ -54,18 +65,23 @@ class TelBot:
             updates = self.parse_bot_updates(response['result'],remove,from_id)
         return updates
 
+    def execute_request(self, message):
+        message_sep = remove_many_spaces(message).split(' ')
+        command = message_sep[0].lower()
+        for com in self.commands:
+            if com.name == command:
+                com.execute(message_sep[1:])
+                break
 
-    def send_to_command(self,command, flags):
-        raise NotImplementedError
 
     def polling(self,remove=True,from_id='all'):
         while 1:
             try:
                 updates = self.get_updates(remove,from_id)
                 for update in updates:
-                    parsed = self.parser.parse_input(update)
-                    if parsed[0] > 0:
-                        self.send_to_command(parsed[1][0],parsed[1][1:])
+                    message = update[0]
+                    # Not using id [1] nor time [2]
+                    self.execute_request(message)
             except NotImplementedError as e:
                 raise e
             except:
@@ -101,66 +117,6 @@ class XiPatoBot(PrivateTelBot):
         super().__init__(api_key, XiPatoParser(), client_id)
         self.reader = XiPatoDocReader('xipato_bot_docs.txt')
         self.ads = []
-
-    # COMMANDS DOCS
-
-    def send_help(self):
-        message = self.reader.get_command('help')
-        commands = filter(lambda x:x[-7:]=='command', dir(XiPatoBot))
-        for command in commands:
-            message += (command.split('_')[0]+'\n')
-        self.send_message(message)
-
-    def send_show_help(self):
-        message = self.reader.get_command('show')
-        self.send_message(message)
-
-    def send_ads_data(self):
-        num_adds = len(self.ads)
-        unseen_ads = self.get_unseen_ads()
-        message = "== ADS ==\n"
-        message+='Total:\t{}\n'.format(num_adds)
-        message+='Unseen:\t{}\n'.format(unseen_ads)
-        message+='\nUse \'help\' for HELP'
-        self.send_message(message)
-
-    # End Of commands documentation 
-
-    def send_to_command(self,command, flags):
-        if command=='show':
-            self.show_command(flags)
-        # TODO
-
-    # == SHOW ==
-
-    def get_ads_by_show_type(self,type):
-        if type == 'all' or type=='':   #DEFAULT
-            return self.ads
-        elif type == 'unseen':
-            return list(filter(lambda x:not(x.seen),self.ads))
-
-    def get_sorted_ads(self, ads, sort_key, reverse):
-        if sort_key == 'return' or sort_key=='':  #DEFAULT
-            return ads.sort(key=lambda x:x.get_return(), reverse=reverse)
-        elif sort_key == 'roi':
-            return ads.sort(key=lambda x:x.get_roi(), reverse=reverse)
-        elif sort_key == 'price':
-            return ads.sort(key=lambda x:x.price, reverse=reverse)
-
-    def show_command(self, flags):
-        ascending = flags[3]==''
-        ads_num = 3 if flags[1]=='' else int(flags[1])
-        if flags[0]=='info':
-            self.send_ads_data()
-        else:
-            ads = self.get_ads_by_show_type(flags[0])
-            if len(ads)>0:
-                ads = self.get_sorted_ads(ads,flags[2],not(ascending))[:ads_num]
-                message = ''
-                for ad in ads:
-                    self.send_message(str(ad))
-            else:
-                self.send_message('Ads Not Found :(')
             
 
     def add_new_ad(self,url):
