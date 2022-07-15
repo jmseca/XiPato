@@ -14,12 +14,12 @@ from utils import *
 class TelBot:
     headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
 
-    def __init__(self, api_key,parser):
+    def __init__(self, api_key, sleep_settings):
         self.api_key = api_key
-        self.parser = parser
+        self.sleep_data = sleep_settings
         self.updade_id = 0
         self.url = 'https://api.telegram.org/bot{}/'.format(self.api_key)
-        self.commands = [Help(self)]
+        self.commands = [Help(self), Stop(self)]
 
     def add_commands(self, *new_commands):
         self.commands += new_commands
@@ -68,26 +68,38 @@ class TelBot:
     def execute_request(self, message):
         message_sep = remove_many_spaces(message).split(' ')
         command = message_sep[0].lower()
+        stop = 0
         for com in self.commands:
             if com.name == command:
-                com.execute(message_sep[1:])
+                stop = com.execute(message_sep[1:])
                 break
+        return stop
+
 
 
     def polling(self,remove=True,from_id='all'):
-        while 1:
+        stop = False
+        while not(stop):
             try:
+                update = []
                 updates = self.get_updates(remove,from_id)
                 for update in updates:
                     message = update[0]
                     # Not using id [1] nor time [2]
-                    self.execute_request(message)
-            except NotImplementedError as e:
-                raise e
-            except:
-                pass
-            time.sleep(5)
-            """Falta mudar este time para funcionar com as horas do dia"""
+                    control = self.execute_request(message)
+                    if control < 0:
+                        stop = True
+            except: 
+                if update!=[]:
+                    try:
+                        self.send_message('An Exception Occurred',update[1])
+                    except:
+                        pass
+                        #write in log
+                else:
+                    pass
+                    #write in log
+            time.sleep(self.sleep_data.get_current_sleep())
 
     
 
@@ -95,8 +107,8 @@ class TelBot:
 
 class PrivateTelBot(TelBot):
 
-    def __init__(self, api_key, parser, client_id):
-        super().__init__(api_key, parser)
+    def __init__(self, api_key, sleep_settings, client_id):
+        super().__init__(api_key,sleep_settings)
         self.client_id = client_id
 
     def send_message(self, message):
@@ -114,8 +126,7 @@ class XiPatoBot(PrivateTelBot):
 
 
     def __init__(self, api_key, client_id):
-        super().__init__(api_key, XiPatoParser(), client_id)
-        self.reader = XiPatoDocReader('xipato_bot_docs.txt')
+        super().__init__(api_key, XiPatoDefaultSleep(), client_id)
         self.ads = []
             
 

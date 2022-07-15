@@ -1,14 +1,41 @@
 TODOs
 
+
+SLEEP SETTINGS
+
+Definir os sleep settings do polling com base na hora do dia
+
+
+----------------------------------------------
+
 Comandos
 
-SET
+UP
+Coloca o bot em up time (ciclos de pooling bem fast)
+
+SET (not priority)
 Definir algumas definicoes
 Exemplos:
-date : definir os sleeps do pooling
+date : definir os sleeps do pooling no "UP time"
 
-STOP
-End ao pooling
+Algo que mostre os current sleep settings
+Pensei em colocar no show, mas isso é só para os ads
+     
+
+
+----------------------------------------------
+
+LOGS
+Registar tudo em Logs
+E arranjar um programa que vai apagando linhas do log quando já ocupa muito espaço
+
+Para registar Logs também seria bem pensado criar excecoes
+
+---------------------------------------------
+
+
+
+
 
 
 

@@ -4,116 +4,70 @@ Author: João Fonseca
 Date: 13 July 2022
 """
 
-class XiPatoDocReader():
+import time
 
-    def __init__(self, file):
-        self.file = file
+class SleepData:
+    '''
+    Data Type for sleeps in bot pooling
+    Receives:       [up_time, {time1: [[start1,end1],[start2,end2],...], ...}]
+    Transforms to:  [hour0_sleep, ..., hour23_sleep, up_time]
 
-    def find_command(self, command, docs_pointer):
-        found = False
-        eof = False
-        while not(found) or not(eof):
-            new_line = docs_pointer.readline()
-            if not new_line: #EOF
-                eof = True
-            else:
-                read_command,lines = new_line.split(' ')
-                lines = int(lines[:-1])
-                if command.lower()==read_command.lower():
-                    found = True
-                else:
-                    for l in range(lines):
-                        docs_pointer.readline()
-        return 0 if eof else lines
+    self.up [is it up time? (0/1), loops in uptime left]
+    '''
 
-    def get_command(self, command):
-        docs = open(self.file,'r')
-        command_doc = ''
-        lines = self.find_command(command, docs)
-        for l in range(lines):
-           command_doc += docs.readline
-        return command_doc
+    def __init__(self, time_dix):
+        sleeps = [0]*25
+        dix = time_dix[1]
+        keys = dix.keys()
+        for key in keys:
+            deltas = dix[key]
+            for delta in deltas:
+                for i in range(delta[0],delta[1]):
+                    sleeps[i] = key
+        sleeps[24] = time_dix[0]
+        self.sleeps = sleeps
+        self.up = [0,0] 
 
-
-class Parser:
-
-    def __init__(self,sep,*commands):
-        self.commands = list(commands)
-        self.sep = sep
-
-    def get_input_message(self, input):
-        raise NotImplementedError
-
-    def format_input(self, command, input_sep):
-        raise NotImplementedError
-
-    def parse_input(self, input):
-        mess = self.get_input_message(input)
-        input_sep = input.split(self.sep)
-        if input_sep[0] in self.commands:
-            return self.format_input(input_sep[0].lower,input_sep[1:])
+    def start_uptime(self, minutes):
+        if minutes == 0:
+            self.up = [0,0]
         else:
-            return [0,[]]
+            self.up = [1,((minutes*60)//self.sleeps[24])]
 
 
-class XiPatoParser(Parser):
+    def set_uptime_sleep(self,sleep):
+        self.sleeps[24] = sleep
 
-    """
-    CAUTION! All commands must have the function parsec_<command_name>
-    """
+    def get_current_sleep(self):
+        if self.up[0]==1:
+            self.up[1]-=1
+            if self.up[1] == 0:
+                self.up = [0,0]
+            return self.sleeps[24]
+        return self.sleeps[(time.localtime().tm_hour)]
+
+    def set_hour_sleep(self, hour, sleep):
+        self.sleeps[hour] = sleep
+
+    def set_interval_sleep(self, delta, sleep):
+        for i in range(delta[0],delta[1]):
+            self.sleeps[i] = sleep
+
+
+class XiPatoDefaultSleep(SleepData):
 
     def __init__(self):
-        parse_commands = filter(lambda x:x[:6]=='parsec', dir(XiPatoParser))
-        commands = list(map(lambda x:x.split('_')[1],parse_commands))
-        super.__init__(' ',*commands)
-
-    def get_input_message(self, input):
-        return input[0]
-
-    def parsec_show(self,input_sep):
-        flags_ordered = ['']*4 #type,limir,order,order_type
-        for element in input_sep:
-            if element in ('all','info','unseen'):
-                flags_ordered[0] = element
-            elif element.isdigit():
-                flags_ordered[1] = element
-            elif element in ('price','roi','return'):
-                flags_ordered[2] = element
-            elif element=='-d':
-                flags_ordered[3] = element
-            else: #incorrect value
-                return []
-        return flags_ordered
-
-    def parsec_help(self,input_sep):
-        if input_sep != [] and input_sep[0] in self.commands:
-            return [input_sep[0]]
-        else: 
-            return ['']
-
-
-    def format_input(self,command, input_sep):
-        input_str_list = [command]
-        if command == 'show':
-            add_to = self.parsec_show(input_sep)
-        elif command == 'help':
-            add_to = self.parsec_help(input_sep)
-        #elif command == 'up':
-        #    add_to = self.parsec_up(input_sep)
-        
-        if add_to==[]: #error spoted
-            return [0,[]]
-        else:
-            input_str_list+= add_to
-            return [len(input_str_list),input_str_list]
-
-        
+        xipato_time = [   
+            5,                                  #Up time                        
+            {300:   [[4,7]],                    # Low       5min
+            120:    [[2,4],[7,8]],              # Mid Low   2min
+            60:     [[8,9],[0,1]],              # Mid       1min
+            20:     [[9,13],[17,20],[23,0]],    # Mid High  20sec
+            10:     [[13,17],[20,23]]}          # High      10sec
+        ]  
+        super().__init__(xipato_time)        
         
 
-class DateSettings:
-
-    def __init__(self, time):
-        self.time = time
 
 
 

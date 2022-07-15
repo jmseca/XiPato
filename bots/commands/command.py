@@ -101,6 +101,7 @@ class Show(XiPatoComplexCommand):
                         self.bot.send_message(str(ad))
                 else:
                     self.bot.send_message('Ads Not Found :(')
+        return 0
 
 
     def get_ads_by_show_type(self,type,ads):
@@ -127,19 +128,30 @@ class Help(XiPatoComplexCommand):
         Below are the commands available:''',
         commands=bot_commands)
         
-    def execute(self, flags):
-        help_flag = flags[0]
-        bot_commands = self.bot.get_commands(no_help=True)
-        mess = ''
-        for com in bot_commands:
-            if com.name == help_flag:
-                mess = com.get_doc()
-                break
-        if mess == '':
-            self.bot.send_message(mess)
-        else:
-            self.bot.send_message('Command Not Found :(')
+    def execute(self, subcs_sep):
+        if subcs_sep!=[]:
+            help_flag = subcs_sep[0]
+            bot_commands = self.bot.get_commands(no_help=True)
+            mess = ''
+            for com in bot_commands:
+                if com.name == help_flag:
+                    mess = com.get_doc()
+                    break
+            if mess == '':
+                self.bot.send_message(mess)
+            else:
+                self.bot.send_message('Command Not Found :(')
+        return 0
+
+class Stop(XiPatoComplexCommand):
+
+    def __init__(self,bot):
+        super().__init__(bot,'stop',
+        '''Stops the Bot''')
         
+    def execute(self, subcs_sep):
+        return -1
+            
 
     
     
