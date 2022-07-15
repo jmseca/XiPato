@@ -8,7 +8,7 @@ import time
 
 class SleepData:
     '''
-    Data Type for sleeps in bot pooling
+    Data Type for sleeps in bot polling
     Receives:       [up_time, {time1: [[start1,end1],[start2,end2],...], ...}]
     Transforms to:  [hour0_sleep, ..., hour23_sleep, up_time]
 
@@ -22,6 +22,7 @@ class SleepData:
         for key in keys:
             deltas = dix[key]
             for delta in deltas:
+                delta[1] = 24 if delta[1]==0 else delta[1]
                 for i in range(delta[0],delta[1]):
                     sleeps[i] = key
         sleeps[24] = time_dix[0]
@@ -46,10 +47,12 @@ class SleepData:
         '''
         Returns a string with the sleep time for each hour
         '''
-        sleeps_dix = dict.fromkeys(list(set(self.sleeps)).sort(),[])
+        unique_sorted_sleep = sorted(list(set(self.sleeps)))
+        sleeps_dix = {secs : [] for secs in unique_sorted_sleep}
         for i in range(24):
             sleeps_dix[self.sleeps[i]] += [i]
-        msg=''
+        print(sleeps_dix)
+        msg='== SLEEP SETTINGS ==\n'
         first = True
         for key in sleeps_dix.keys():
             msg += '{}:\t'.format(key)
@@ -81,11 +84,11 @@ class XiPatoDefaultSleep(SleepData):
             5,                                  #Up time                        
             {300:   [[4,7]],                    # Low       5min
             120:    [[2,4],[7,8]],              # Mid Low   2min
-            60:     [[8,9],[0,1]],              # Mid       1min
+            60:     [[8,9],[0,2]],              # Mid       1min
             20:     [[9,13],[17,20],[23,0]],    # Mid High  20sec
             10:     [[13,17],[20,23]]}          # High      10sec
-        ]  
-        super().__init__(xipato_time)        
+        ]
+        super().__init__(xipato_time)
         
 
 

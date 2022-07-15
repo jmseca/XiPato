@@ -7,7 +7,7 @@ Date: 12 July 2022
 import time
 import requests
 from ads import *
-from bots.commands.command import *
+from commands.command import *
 from classex import *
 from utils import *
 
@@ -18,12 +18,14 @@ class TelBot:
     def __init__(self, api_key, sleep_settings):
         self.api_key = api_key
         self.sleep_data = sleep_settings
-        self.updade_id = 0
+        self.update_id = 0
         self.url = 'https://api.telegram.org/bot{}/'.format(self.api_key)
         self.commands = [HelpCommand(self), StopCommand(self)]
+        self.commands[0].update_commands()
 
     def add_commands(self, *new_commands):
         self.commands += new_commands
+        self.commands[0].update_commands()
 
     def get_commands(self, no_help=False):
         if no_help:
@@ -37,18 +39,21 @@ class TelBot:
         return requests.get(url,params = params ,headers=TelBot.headers).json()['ok']
 
     def parse_bot_updates(self, results, remove, from_id):
-        high_update_id = self.update_id
+        high_update_id = 0
+        res = False
         updates = []
         for result in results:
+            res = True
             uid = result['update_id']
+            print(uid,result['message']['text'])
             chat_id = result['message']['chat']['id']
             if from_id=='all' or from_id==chat_id:
-                message = result['message']['message']
+                message = result['message']['text']
                 date = result['message']['date']
                 updates += [[message,chat_id, date]]
-            if remove:
-                high_update_id = max(high_update_id,uid)
-        self.updade_id = high_update_id
+            high_update_id = max(high_update_id,uid)
+        if remove:
+            self.update_id = (high_update_id+1) if res else self.update_id
         return updates
 
 
@@ -60,7 +65,7 @@ class TelBot:
         '''
         updates = []
         url = self.url+'getUpdates'
-        params = {'offset':self.upgrade_id}
+        params = {'offset':self.update_id}
         response = requests.get(url, params=params ,headers=TelBot.headers).json()
         if response['ok']:
             updates = self.parse_bot_updates(response['result'],remove,from_id)
@@ -77,20 +82,26 @@ class TelBot:
         return stop
 
 
+    def get_sleep(self):
+        return self.sleep_data.get_current_sleep()
+
+
 
     def polling(self,remove=True,from_id='all'):
         stop = False
         while not(stop):
-            try:
-                update = []
-                updates = self.get_updates(remove,from_id)
-                for update in updates:
-                    message = update[0]
-                    # Not using id [1] nor time [2]
-                    control = self.execute_request(message)
-                    if control < 0:
-                        stop = True
-            except: 
+            #try:
+            update = []
+            updates = self.get_updates(remove,from_id)
+            for update in updates:
+                message = update[0]
+                # Not using id [1] nor time [2]
+                print('Sending message {}'.format(message))
+                control = self.execute_request(message)
+                if control < 0:
+                    stop = True
+            '''except: 
+                print('Algo deu erro')
                 if update!=[]:
                     try:
                         self.send_message('An Exception Occurred',update[1])
@@ -99,8 +110,9 @@ class TelBot:
                         #write in log
                 else:
                     pass
-                    #write in log
-            time.sleep(self.sleep_data.get_current_sleep())
+                    #write in log'''
+            time.sleep(self.get_sleep())
+        
 
     
 
@@ -115,8 +127,10 @@ class PrivateTelBot(TelBot):
     def send_message(self, message):
         return super().send_message(message,self.client_id)
 
-    def get_updates(self, remove=True):
-        return super().get_updates(remove, self.client_id)
+    def polling(self, remove=True):
+        self.send_message('Bot Started')
+        super().polling(remove, self.client_id)
+        self.send_message('Bot Stopped')
 
 
 class XiPatoBot(PrivateTelBot):
@@ -129,6 +143,7 @@ class XiPatoBot(PrivateTelBot):
     def __init__(self, api_key, client_id):
         super().__init__(api_key, XiPatoDefaultSleep(), client_id)
         self.ads = []
+        self.add_commands(UpCommand(self),ShowCommand(self))
             
 
     def add_new_ad(self,url):

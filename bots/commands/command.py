@@ -4,6 +4,8 @@ Author: João Fonseca
 Date: 14 July 2022
 """
 
+import requests
+
 class XiPatoCommand:
 
     def __init__(self, bot, name, descr):
@@ -55,12 +57,14 @@ class XiPatoComplexCommand(XiPatoCommand):
 class HelpCommand(XiPatoComplexCommand):
 
     def __init__(self,bot):
-        bot_commands = list(map(lambda x:x.name, bot.get_commands(no_help=True)))
         super().__init__(bot,'help',
-        '''If you need help with some commands, send help <command>.
-        Below are the commands available:''',
-        commands=bot_commands)
+        'If you need help with some commands, send help <command>.\nBelow are the commands available:',
+        commands=[])
         
+    def update_commands(self):
+        bot_commands = list(map(lambda x:x.name, self.bot.get_commands(no_help=True)))
+        self.subcs['commands'] = bot_commands
+
     def execute(self, subcs_sep):
         if subcs_sep!=[]:
             help_flag = subcs_sep[0]
@@ -70,10 +74,12 @@ class HelpCommand(XiPatoComplexCommand):
                 if com.name == help_flag:
                     mess = com.get_doc()
                     break
-            if mess == '':
+            if mess != '':
                 self.bot.send_message(mess)
             else:
                 self.bot.send_message('Command Not Found :(')
+        else:
+            self.bot.send_message(self.get_doc())
         return 0
 
 class StopCommand(XiPatoCommand):
@@ -83,14 +89,15 @@ class StopCommand(XiPatoCommand):
         '''Stops the Bot''')
         
     def execute(self, subcs_sep):
+        #Make sure not to reread messages sent at the same time as stop 
+        requests.get(self.bot.url+'getUpdates',params={'offset':self.bot.update_id},headers=self.bot.headers)
         return -1
 
 class AdsCommand(XiPatoComplexCommand):
 
     def __init__(self,bot):
         super().__init__(bot,'ads',
-        '''The 'ads' command shows stored ads.
-        It follows the following syntax: ads [type] [limit] [order] [order_type]''',
+        'The \'ads\' command shows stored ads.\nIt follows the following syntax:\nads [type] [limit] [order] [order_type]',
         type=['unseen','all','info'],
         limit=['any natural number'],
         order=['return','roi','price'],
@@ -158,22 +165,22 @@ class UpCommand(XiPatoComplexCommand):
 
     def __init__(self,bot):
         super().__init__(bot,'up',
-        '''Makes the Bot run in Up Time for <time> minutes
-        It follows the following syntax: up [time]''',
+        'Makes the Bot run in Up Time for <time> minutes\nIt follows the following syntax:\nup [time]',
         time=['any natural number'])
 
     def execute(self, subcs_sep):
         if subcs_sep!=[] and subcs_sep[0].isdigit():
             up_flag = int(subcs_sep[0])
             self.bot.sleep_data.start_uptime(up_flag)
+            if up_flag>0:
+                self.bot.send_message('Up Time for {} minutes'.format(up_flag))
         return 0
 
 class ShowCommand(XiPatoComplexCommand):
 
     def __init__(self,bot):
         super().__init__(bot,'show',
-        '''Shows information about the bot
-        It follows the following syntax: show [info]''',
+        'Shows information about the bot\nIt follows the following syntax:\nshow [info]',
         info=['sleep'])
 
     def execute(self, subcs_sep):

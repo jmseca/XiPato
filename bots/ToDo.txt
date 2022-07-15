@@ -35,9 +35,6 @@ Para registar Logs também seria bem pensado criar excecoes
 
 ---------------------------------------------
 
-Comandos estão definidos para funcionar com Private Bots only
-(é ok, Xipato bots são tds private bots)
-
 
 
 
