@@ -7,6 +7,7 @@ Date: 12 July 2022
 import time
 import requests
 from ads import *
+from bots.commands.command import *
 from classex import *
 from utils import *
 
@@ -19,7 +20,7 @@ class TelBot:
         self.sleep_data = sleep_settings
         self.updade_id = 0
         self.url = 'https://api.telegram.org/bot{}/'.format(self.api_key)
-        self.commands = [Help(self), Stop(self)]
+        self.commands = [HelpCommand(self), StopCommand(self)]
 
     def add_commands(self, *new_commands):
         self.commands += new_commands

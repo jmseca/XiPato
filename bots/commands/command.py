@@ -49,7 +49,43 @@ class XiPatoComplexCommand(XiPatoCommand):
         raise NotImplementedError
 
 
-class Ads(XiPatoComplexCommand):
+
+
+
+class HelpCommand(XiPatoComplexCommand):
+
+    def __init__(self,bot):
+        bot_commands = list(map(lambda x:x.name, bot.get_commands(no_help=True)))
+        super().__init__(bot,'help',
+        '''If you need help with some commands, send help <command>.
+        Below are the commands available:''',
+        commands=bot_commands)
+        
+    def execute(self, subcs_sep):
+        if subcs_sep!=[]:
+            help_flag = subcs_sep[0]
+            bot_commands = self.bot.get_commands(no_help=True)
+            mess = ''
+            for com in bot_commands:
+                if com.name == help_flag:
+                    mess = com.get_doc()
+                    break
+            if mess == '':
+                self.bot.send_message(mess)
+            else:
+                self.bot.send_message('Command Not Found :(')
+        return 0
+
+class StopCommand(XiPatoCommand):
+
+    def __init__(self,bot):
+        super().__init__(bot,'stop',
+        '''Stops the Bot''')
+        
+    def execute(self, subcs_sep):
+        return -1
+
+class AdsCommand(XiPatoComplexCommand):
 
     def __init__(self,bot):
         super().__init__(bot,'ads',
@@ -118,39 +154,21 @@ class Ads(XiPatoComplexCommand):
         elif sort_key == 'price':
             return ads.sort(key=lambda x:x.price, reverse=reverse)
 
-
-class Help(XiPatoComplexCommand):
+class UpCommand(XiPatoComplexCommand):
 
     def __init__(self,bot):
-        bot_commands = list(map(lambda x:x.name, bot.get_commands(no_help=True)))
-        super().__init__(bot,'help',
-        '''If you need help with some commands, send help <command>.
-        Below are the commands available:''',
-        commands=bot_commands)
-        
+        super().__init__(bot,'up',
+        '''Makes the Bot run in Up Time for <time> minutes
+        It follows the following syntax: up [time]''',
+        time=['any natural number'])
+
     def execute(self, subcs_sep):
-        if subcs_sep!=[]:
-            help_flag = subcs_sep[0]
-            bot_commands = self.bot.get_commands(no_help=True)
-            mess = ''
-            for com in bot_commands:
-                if com.name == help_flag:
-                    mess = com.get_doc()
-                    break
-            if mess == '':
-                self.bot.send_message(mess)
-            else:
-                self.bot.send_message('Command Not Found :(')
+        if subcs_sep!=[] and subcs_sep[0].isdigit():
+            up_flag = int(subcs_sep[0])
+            self.bot.sleep_data.start_uptime(up_flag)
         return 0
 
-class Stop(XiPatoComplexCommand):
 
-    def __init__(self,bot):
-        super().__init__(bot,'stop',
-        '''Stops the Bot''')
-        
-    def execute(self, subcs_sep):
-        return -1
             
 
     

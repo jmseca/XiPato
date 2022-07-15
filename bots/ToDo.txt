@@ -18,10 +18,12 @@ Definir algumas definicoes
 Exemplos:
 date : definir os sleeps do pooling no "UP time"
 
-Algo que mostre os current sleep settings
-Pensei em colocar no show, mas isso é só para os ads
-     
+SHOW     
+Mostrar dados do bot
+tipo sleep (mostra os sleep settings)
 
+Set + Show deverá ser uma espécie de simbiose
+O que dá para fazer Show deverá dar para fazer Set
 
 ----------------------------------------------
 
@@ -32,6 +34,9 @@ E arranjar um programa que vai apagando linhas do log quando já ocupa muito esp
 Para registar Logs também seria bem pensado criar excecoes
 
 ---------------------------------------------
+
+Comandos estão definidos para funcionar com Private Bots only
+(é ok, Xipato bots são tds private bots)
 
 
 
