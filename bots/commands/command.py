@@ -49,12 +49,12 @@ class XiPatoComplexCommand(XiPatoCommand):
         raise NotImplementedError
 
 
-class Show(XiPatoComplexCommand):
+class Ads(XiPatoComplexCommand):
 
     def __init__(self,bot):
-        super().__init__(bot,'show',
-        '''The 'show' command shows stored ads.
-        It follows the following syntax: show [type] [limit] [order] [order_type]''',
+        super().__init__(bot,'ads',
+        '''The 'ads' command shows stored ads.
+        It follows the following syntax: ads [type] [limit] [order] [order_type]''',
         type=['unseen','all','info'],
         limit=['any natural number'],
         order=['return','roi','price'],
@@ -75,10 +75,10 @@ class Show(XiPatoComplexCommand):
                 return []
         return flags_ordered
 
-    def show_info(self):
+    def ads_info(self):
         num_adds = len(self.bot.ads)
         unseen_ads = len(self.bot.get_unseen_ads())
-        message = "== ADS ==\n"
+        message = "== ADS INFO ==\n"
         message+='Total:\t{}\n'.format(num_adds)
         message+='Unseen:\t{}\n'.format(unseen_ads)
         message+='\nUse \'help\' for HELP'
@@ -91,9 +91,9 @@ class Show(XiPatoComplexCommand):
             ascending = flags[3]==''
             ads_num = 3 if flags[1]=='' else int(flags[1])
             if flags[0]=='info':
-                self.show_info()
+                self.ads_info()
             else:
-                ads = self.get_ads_by_show_type(flags[0])
+                ads = self.get_ads_by_type(flags[0])
                 if len(ads)>0:
                     ads = self.get_sorted_ads(ads,flags[2],not(ascending))[:ads_num]
                     message = ''
@@ -104,7 +104,7 @@ class Show(XiPatoComplexCommand):
         return 0
 
 
-    def get_ads_by_show_type(self,type,ads):
+    def get_ads_by_type(self,type,ads):
         if type == 'all' :
             return ads
         elif type == 'unseen' or type=='':   #DEFAULT
