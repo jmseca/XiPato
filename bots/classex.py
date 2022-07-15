@@ -34,10 +34,6 @@ class SleepData:
         else:
             self.up = [1,((minutes*60)//self.sleeps[24])]
 
-
-    def set_uptime_sleep(self,sleep):
-        self.sleeps[24] = sleep
-
     def get_current_sleep(self):
         if self.up[0]==1:
             self.up[1]-=1
@@ -45,6 +41,30 @@ class SleepData:
                 self.up = [0,0]
             return self.sleeps[24]
         return self.sleeps[(time.localtime().tm_hour)]
+
+    def get_sleep_settings(self):
+        '''
+        Returns a string with the sleep time for each hour
+        '''
+        sleeps_dix = dict.fromkeys(list(set(self.sleeps)).sort(),[])
+        for i in range(24):
+            sleeps_dix[self.sleeps[i]] += [i]
+        msg=''
+        first = True
+        for key in sleeps_dix.keys():
+            msg += '{}:\t'.format(key)
+            if first:
+                msg += ' UP,'
+                first = False
+            for el in sleeps_dix[key]:
+                msg += ' {},'.format(el)
+            msg += '\n'
+        return msg[:-1]
+
+
+
+    def set_uptime_sleep(self,sleep):
+        self.sleeps[24] = sleep
 
     def set_hour_sleep(self, hour, sleep):
         self.sleeps[hour] = sleep

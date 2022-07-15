@@ -168,6 +168,21 @@ class UpCommand(XiPatoComplexCommand):
             self.bot.sleep_data.start_uptime(up_flag)
         return 0
 
+class ShowCommand(XiPatoComplexCommand):
+
+    def __init__(self,bot):
+        super().__init__(bot,'show',
+        '''Shows information about the bot
+        It follows the following syntax: show [info]''',
+        info=['sleep'])
+
+    def execute(self, subcs_sep):
+        if subcs_sep!=[] and subcs_sep[0] in self.subcs['info']:
+            show_flag = subcs_sep[0]
+            if show_flag == 'sleep':
+                self.bot.send_message(self.bot.sleep_data.get_sleep_settings())
+        return 0
+
 
             
 
