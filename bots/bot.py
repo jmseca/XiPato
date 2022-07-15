@@ -45,7 +45,6 @@ class TelBot:
         for result in results:
             res = True
             uid = result['update_id']
-            print(uid,result['message']['text'])
             chat_id = result['message']['chat']['id']
             if from_id=='all' or from_id==chat_id:
                 message = result['message']['text']
@@ -74,17 +73,26 @@ class TelBot:
     def execute_request(self, message):
         message_sep = remove_many_spaces(message).split(' ')
         command = message_sep[0].lower()
-        stop = 0
+        msg = ''
         for com in self.commands:
             if com.name == command:
-                stop = com.execute(message_sep[1:])
+                msg = com.execute(message_sep[1:])
                 break
+        return msg
+
+
+    def sleep(self):
+        time.sleep(abs(self.sleep_data.get_current_sleep()))
+
+    def send_response(self, msg_from_bot,chat_id):
+        stop = False
+        if msg_from_bot != '':
+            if msg_from_bot == 'stop':
+                stop = True
+                self.send_message('Bot Stopped',chat_id)
+            else:
+                self.send_message(msg_from_bot,chat_id)
         return stop
-
-
-    def get_sleep(self):
-        return self.sleep_data.get_current_sleep()
-
 
 
     def polling(self,remove=True,from_id='all'):
@@ -96,10 +104,12 @@ class TelBot:
             for update in updates:
                 message = update[0]
                 # Not using id [1] nor time [2]
-                print('Sending message {}'.format(message))
-                control = self.execute_request(message)
-                if control < 0:
-                    stop = True
+                msg_from_bot = self.execute_request(message)
+                stop = self.send_response(msg_from_bot,update[1])
+                if stop:
+                    break
+                
+                
             '''except: 
                 print('Algo deu erro')
                 if update!=[]:
@@ -111,7 +121,8 @@ class TelBot:
                 else:
                     pass
                     #write in log'''
-            time.sleep(self.get_sleep())
+            if not(stop):
+                self.sleep()
         
 
     
@@ -132,22 +143,44 @@ class PrivateTelBot(TelBot):
         super().polling(remove, self.client_id)
         self.send_message('Bot Stopped')
 
+    def sleep(self):
+        sleep_now = self.sleep_data.get_current_sleep()
+        if sleep_now < 0: #Up Time is Over
+            self.send_message('Up Time is Over')
+        time.sleep(abs(sleep_now))
+
+    def send_response(self, msg_from_bot,chat_id):
+        stop = False
+        if msg_from_bot != '':
+            if msg_from_bot == 'stop':
+                stop = True
+            else:
+                self.send_message(msg_from_bot)
+        return stop
+
 
 class XiPatoBot(PrivateTelBot):
     """
     CAUTION: All commands must have a function called <command_name>_command
     Otherwise, the help documentation will not function properly
     """
-
+     
 
     def __init__(self, api_key, client_id):
         super().__init__(api_key, XiPatoDefaultSleep(), client_id)
         self.ads = []
-        self.add_commands(UpCommand(self),ShowCommand(self))
+        self.add_commands(UpCommand(self),ShowCommand(self),AdsCommand(self))
+        
+        self.add_new_ad('abc',1000,0.5)
+        self.add_new_ad('abd',2000,0.4)
+        self.add_new_ad('abf',700,1.2)
+        self.add_new_ad('abg',1200,0.8)
+        self.add_new_ad('abh',1100,0.6)
+        self.add_new_ad('abj',1050,0.55)
             
 
-    def add_new_ad(self,url):
-        self.ads = [CarAd(url)]
+    def add_new_ad(self,url,price,roi):
+        self.ads += [CarAd(url,price,roi)]
 
 
     

@@ -34,6 +34,14 @@ E arranjar um programa que vai apagando linhas do log quando já ocupa muito esp
 Para registar Logs também seria bem pensado criar excecoes
 
 ---------------------------------------------
+=============================================
+---------------------------------------------
+
+ToDos NÂO PRIORITÁRIOS
+
+No TelBot, ter um comando send_message_to_all para enviar uma mensagem a todos os 
+clientes. Por exemplo, o STOP
+
 
 
 

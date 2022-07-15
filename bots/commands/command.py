@@ -75,12 +75,11 @@ class HelpCommand(XiPatoComplexCommand):
                     mess = com.get_doc()
                     break
             if mess != '':
-                self.bot.send_message(mess)
+                return mess
             else:
-                self.bot.send_message('Command Not Found :(')
+                return 'Command Not Found :('
         else:
-            self.bot.send_message(self.get_doc())
-        return 0
+            return self.get_doc()
 
 class StopCommand(XiPatoCommand):
 
@@ -91,7 +90,7 @@ class StopCommand(XiPatoCommand):
     def execute(self, subcs_sep):
         #Make sure not to reread messages sent at the same time as stop 
         requests.get(self.bot.url+'getUpdates',params={'offset':self.bot.update_id},headers=self.bot.headers)
-        return -1
+        return 'stop'
 
 class AdsCommand(XiPatoComplexCommand):
 
@@ -120,12 +119,12 @@ class AdsCommand(XiPatoComplexCommand):
 
     def ads_info(self):
         num_adds = len(self.bot.ads)
-        unseen_ads = len(self.bot.get_unseen_ads())
+        unseen_ads = len(list(map(lambda x : not(x.seen),self.bot.ads)))
         message = "== ADS INFO ==\n"
         message+='Total:\t{}\n'.format(num_adds)
         message+='Unseen:\t{}\n'.format(unseen_ads)
         message+='\nUse \'help\' for HELP'
-        self.send_message(message)
+        return message
 
     def execute(self, subcs_sep):
         flags = self.parse(subcs_sep)
@@ -134,32 +133,33 @@ class AdsCommand(XiPatoComplexCommand):
             ascending = flags[3]==''
             ads_num = 3 if flags[1]=='' else int(flags[1])
             if flags[0]=='info':
-                self.ads_info()
+                return self.ads_info()
             else:
                 ads = self.get_ads_by_type(flags[0])
                 if len(ads)>0:
                     ads = self.get_sorted_ads(ads,flags[2],not(ascending))[:ads_num]
                     message = ''
                     for ad in ads:
+                        #exception, does not return the msg, sends it
                         self.bot.send_message(str(ad))
+                    return ''
                 else:
-                    self.bot.send_message('Ads Not Found :(')
-        return 0
+                    return 'Ads Not Found :('
 
 
-    def get_ads_by_type(self,type,ads):
+    def get_ads_by_type(self,type):
         if type == 'all' :
-            return ads
+            return self.bot.ads
         elif type == 'unseen' or type=='':   #DEFAULT
-            return list(filter(lambda x:not(x.seen),ads))
+            return list(filter(lambda x:not(x.seen),self.bot.ads))
 
     def get_sorted_ads(self, ads, sort_key, reverse):
         if sort_key == 'return' or sort_key=='':  #DEFAULT
-            return ads.sort(key=lambda x:x.get_return(), reverse=reverse)
+            return sorted(ads, key=lambda x:x.get_return(), reverse=reverse)
         elif sort_key == 'roi':
-            return ads.sort(key=lambda x:x.get_roi(), reverse=reverse)
+            return sorted(ads,key=lambda x:x.get_roi(), reverse=reverse)
         elif sort_key == 'price':
-            return ads.sort(key=lambda x:x.price, reverse=reverse)
+            return sorted(ads,key=lambda x:x.price, reverse=reverse)
 
 class UpCommand(XiPatoComplexCommand):
 
@@ -173,8 +173,9 @@ class UpCommand(XiPatoComplexCommand):
             up_flag = int(subcs_sep[0])
             self.bot.sleep_data.start_uptime(up_flag)
             if up_flag>0:
-                self.bot.send_message('Up Time for {} minutes'.format(up_flag))
-        return 0
+                return 'Up Time for {} minutes'.format(up_flag)
+        return ''
+
 
 class ShowCommand(XiPatoComplexCommand):
 
@@ -187,8 +188,8 @@ class ShowCommand(XiPatoComplexCommand):
         if subcs_sep!=[] and subcs_sep[0] in self.subcs['info']:
             show_flag = subcs_sep[0]
             if show_flag == 'sleep':
-                self.bot.send_message(self.bot.sleep_data.get_sleep_settings())
-        return 0
+                return self.bot.sleep_data.get_sleep_settings()
+        return ''
 
 
             
