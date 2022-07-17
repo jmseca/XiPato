@@ -181,6 +181,7 @@ class XiPatoBot(PrivateTelBot):
 
     def add_new_ad(self,url,price,roi):
         self.ads += [CarAd(url,price,roi)]
+        #TO DO: Inform the user off new ads
 
 
     
