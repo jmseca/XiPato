@@ -9,6 +9,8 @@ from lxml import etree
 import asyncio
 import httpx
 
+from CarBrands import *
+
 
 
 class OLXScraper:
@@ -28,6 +30,32 @@ class OLXScraper:
             return 5
         else:
             return int(max[0].text)
+
+    def get_title(self, parsed):
+        '''
+        Returns the ad title
+        '''
+        #TODO: Criar excecao para quando nao ha titulo
+        return parsed.xpath
+
+    def get_labels(self,parsed):
+        '''
+        Gets the little labels tha exist in some of the ads.
+        For example, in car ads, some of this labels indicate de Kms and the manufacturing year
+        '''
+        labels = []
+        n=1
+        done = False
+        while not(done):
+            elem = parsed.xpath(f'/html/body/div[1]/div[1]/div[3]/div[3]/div[1]/div[2]/ul/li[{n}]/p/span')
+            if elem==[]:
+                elem = parsed.xpath(f'/html/body/div[1]/div[1]/div[3]/div[3]/div[1]/div[2]/ul/li[{n}]/p')
+                if elem==[]:
+                    done = True
+                    continue
+            labels += [elem[0].text]
+            n+=1
+        return labels
 
     async def get_page_ads_urls(self,url,client):
         done,n = False,1
@@ -68,7 +96,7 @@ class CarOLXScraper(OLXScraper):
     base_url = 'https://www.olx.pt/d/carros-motos-e-barcos/carros/q-carros/'
 
     def __init__(self):
-        pass
+        self.car_brands = CarBrands()
 
     def get_all_ads_filter(self, min_price=None, max_price=None, min_year=None, max_year=None,
         max_kms=None, ignore_out=True, asc_by_time=True):
@@ -96,15 +124,42 @@ class CarOLXScraper(OLXScraper):
         else:
             return urls
 
-    def get_add_info(self,url,client):
+    def get_labels_info(self,labels):
+        '''
+        Gets the info present in the labels. Returns the following:
+        [Kms, Year, Car model]
+        If a specific info is not provided, None is returned
+        '''
+        count = 0
+        info = [None,None,None]
+        for label in labels:
+            if label[:5]=='Quilo':
+                kms = label.split(' ')[1]
+                info[0] = int(kms.replace('.',''))
+                count+=1
+            elif label[:3]=='Ano':
+                info[1] = int(label.split(' ')[1])
+                count+=1
+            elif label[:6]=='Modelo':
+                info[2] = label.split(' ')[1]
+            if count==3:
+                break
+        return info
+
+
+    
+
+    async def get_add_info(self,url,client):
         '''
         TODO: 
         1. filtros para descricoes
         ou nao
         2. decidir se criamos o cliente antes, ou se abrimos um novo quando vamos ver os urls
-        
         '''
-        pass
+        response = await client.get(url,headers=OLXScraper.header)
+        soup = bsoup(response.content, "html.parser")
+        parsed = etree.HTML(str(soup))
+
 
 
 
