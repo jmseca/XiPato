@@ -14,25 +14,106 @@ from Exceptions import *
 from Entities import *
 
 
-
-class OLXScraper:
-
-    olx_url = 'https://www.olx.pt'
+class AdScraperWithPages:
     header = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36 Edg/103.0.1264.62'}
 
-    def __init__(self):
-        pass
+    def __init__(self,lowest_page):
+        self.lowest_page = lowest_page
 
-    async def get_pages_number(self,client,url):
-        response = await client.get(url,headers=OLXScraper.header)
-        print(response)
+    async def get_parsed(self,client,url):
+        response = await client.get(url,headers=self.header)
         soup = bsoup(response.content, "html.parser")
         parsed = etree.HTML(str(soup))
-        max = parsed.xpath('/html/body/div[1]/div[1]/div[2]/form/div[5]/div/section[1]/div/ul/li[5]/a')
+        return parsed
+
+    async def get_pages_number_core(self,client,url,page_num_xpath):
+        parsed = await self.get_parsed(client,url)
+        max = parsed.xpath(page_num_xpath)
         if max==[]:
-            return 5
+            return self.lowest_page
         else:
             return int(max[0].text)
+
+
+    async def get_page_ads_urls_core(self,url,client,main_xpath,sub_xpath):
+        '''
+        main_xpath has to follow the pattern below:
+        (...)/div[n] -> div[n] is what chages, so, main_xpath has to be
+        (...)/div
+        '''
+        done,n = False,1
+        urls = []
+        parsed = await self.get_parsed(client,url)
+        while not(done):
+            div = parsed.xpath(main_xpath+f'[{n}]')
+            if div==[]:
+                done = True
+            else:
+                pre_url = div[0].xpath(sub_xpath)
+                if pre_url!=[]:
+                    urls += [pre_url[0]]
+            n+=1
+        return urls
+
+    async def _async_get_ads(self,main_url):
+
+        async with httpx.AsyncClient() as client:
+            max_page = await self.get_pages_number(client,main_url)
+            tasks = []
+            for number in range(1, max_page):
+                url = main_url+f'?page={number}'
+                tasks.append(asyncio.ensure_future(self.get_page_ads_urls(url, client)))
+
+            urls = await asyncio.gather(*tasks)
+            return urls
+
+    def get_all_ads_urls(self,main_url):
+        urls_per_page = asyncio.run(self._async_get_ads(main_url))
+        return [item for sublist in urls_per_page for item in sublist]
+
+
+
+class SVScraper(AdScraperWithPages):
+
+    base_url = 'https://www.standvirtual.com/carros'
+
+    def __init__(self):
+        lowest_page = 5
+        super().__init__(lowest_page)
+
+    async def get_pages_number(self,client,url):
+        return await self.get_pages_number_core(client,url,'/html/body/div[1]/div/div/div/div[1]/div[2]/div[2]/div[1]/div[3]/div[3]/div/ul/li[6]/a/span')
+
+    async def get_page_ads_urls(self,url,client):
+        return await self.get_page_ads_urls_core(url, client,
+            '/html/body/div[1]/div/div/div/div[1]/div[2]/div[2]/div[1]/div[3]/main/article',
+            'div[1]/h2/a/@href'
+        )
+
+    def get_ads_urls_by_car(self,car_brand,car_model,year,delta=2):
+        main_url = self.base_url + f'/{car_brand}/{car_model}/'
+        min_year, max_year = year-delta,year+delta
+        main_url += f'desde-{min_year}?search%5Bfilter_float_first_registration_year%3Ato%5D={max_year}'
+        return self.get_all_ads_urls(main_url)
+
+        
+
+
+
+        
+
+
+
+class OLXScraper(AdScraperWithPages):
+
+    olx_url = 'https://www.olx.pt'
+
+    def __init__(self):
+        lowest_page = 5
+        super().__init__(lowest_page)
+
+    async def get_pages_number(self,client,url):
+        return await self.get_pages_number_core(client,url,'/html/body/div[1]/div[1]/div[2]/form/div[5]/div/section[1]/div/ul/li[5]/a')
 
     def get_title(self, parsed, url):
         '''
@@ -65,38 +146,13 @@ class OLXScraper:
             n+=1
         return labels
 
+
     async def get_page_ads_urls(self,url,client):
-        done,n = False,1
-        urls = []
-        response = await client.get(url,headers=OLXScraper.header)
-        soup = bsoup(response.content, "html.parser")
-        parsed = etree.HTML(str(soup))
-        while not(done):
-            div = parsed.xpath(f'/html/body/div[1]/div[1]/div[2]/form/div[5]/div/div[2]/div[{n}]')
-            if div==[]:
-                done = True
-            else:
-                pre_url = div[0].xpath('a/@href')
-                if pre_url!=[]:
-                    urls += [pre_url[0]]
-            n+=1
-        return urls 
+        return await self.get_page_ads_urls_core(url, client,
+            '/html/body/div[1]/div[1]/div[2]/form/div[5]/div/div[2]/div',
+            'a/@href'
+        )
 
-    async def _async_get_ads(self,main_url):
-
-        async with httpx.AsyncClient() as client:
-            max_page = await self.get_pages_number(client,main_url)
-            tasks = []
-            for number in range(1, max_page):
-                url = main_url+f'?page={number}'
-                tasks.append(asyncio.ensure_future(self.get_page_ads_urls(url, client)))
-
-            urls = await asyncio.gather(*tasks)
-            return urls
-
-    def get_all_ads_urls(self,main_url):
-        urls_per_page = asyncio.run(self._async_get_ads(main_url))
-        return [item for sublist in urls_per_page for item in sublist]
 
 
 class CarOLXScraper(OLXScraper):
@@ -150,7 +206,8 @@ class CarOLXScraper(OLXScraper):
         If a specific info is not provided, None is returned
         '''
         count = 0
-        info = [None,None,None]
+        # lest element controls if all labels were given
+        info = [None,None,None,0]
         for label in labels:
             if label[:5]=='Quilo':
                 kms = label.split(' ')[1]
@@ -162,20 +219,22 @@ class CarOLXScraper(OLXScraper):
             elif label[:6]=='Modelo':
                 info[2] = label.split(' ')[1]
             if count==3:
+                info[3] = 1
                 break
         return info
 
 
     async def get_ad_info(self,url,client,i,info):
-        response = await client.get(self.olx_url+url,headers=OLXScraper.header)
-        soup = bsoup(response.content, "html.parser")
-        parsed = etree.HTML(str(soup))
+        parsed = await self.get_parsed(client,self.olx_url+url)
         try:
             brand = self.get_brand_from_title(parsed,url)
         except NoCarBrandException as e:
+            # The ad gets discarded
             return
         labels_info = self.get_labels_info(parsed)
-        info[i].insert_info(brand,labels_info[2],labels_info[0],url,labels_info[1])
+        if (labels_info[3]==1):
+            info[i].insert_info(brand,labels_info[2],labels_info[0],url,labels_info[1])
+        # If not all labels are given, the ad is discarded (at least for now)
         
     
     async def _get_async_ads_info(self, urls):
