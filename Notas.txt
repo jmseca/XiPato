@@ -1,0 +1,10 @@
+Scrapers
+
+SV em alguns carros mostra o preco medio dos carros pelo modelo, marca, kms, ano, motor,...
+Por agora não vou fazer scrape desta stat, pq tinha de encontrar um carro igual ao que estaria a vender
+Vou optar por criar eu uma estatistica dessas
+MAS FICA AQUI O LEMBRETE  DE AQUILO EXISTE!
+
+Renault Clio - há uns modelos sport que são considerados Clio, mas que são muitoooooo mais caros
+Consigo ver no SV a diferença de cilindrada, mas no OLX não. 
+Tenho de ver como me livro destes big outsiders

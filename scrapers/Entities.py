@@ -13,9 +13,10 @@ class CarAd:
         self.url = url
         self.year = year
 
-    def insert_info(self, brand, model, kms, url, year):
+    def insert_info(self, brand, model, price, kms, year, url):
         self.brand = brand
         self.model = model
+        self.price = price
         self.kms = kms
-        self.url = url
         self.year = year
+        self.url = url
