@@ -10,11 +10,14 @@ import asyncio
 import httpx
 
 from CarBrands import *
+from Exceptions import *
+from Entities import *
 
 
 
 class OLXScraper:
 
+    olx_url = 'https://www.olx.pt'
     header = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36 Edg/103.0.1264.62'}
 
     def __init__(self):
@@ -31,12 +34,17 @@ class OLXScraper:
         else:
             return int(max[0].text)
 
-    def get_title(self, parsed):
+    def get_title(self, parsed, url):
         '''
         Returns the ad title
         '''
         #TODO: Criar excecao para quando nao ha titulo
-        return parsed.xpath
+        pre_title = parsed.xpath('/html/body/div[1]/div[1]/div[3]/div[3]/div[1]/div[2]/div[2]/h1')
+        if pre_title==[]:
+            #prolly does not have photo
+            raise NoAdTitleException(url)
+        else:
+            return pre_title[0].text
 
     def get_labels(self,parsed):
         '''
@@ -98,6 +106,17 @@ class CarOLXScraper(OLXScraper):
     def __init__(self):
         self.car_brands = CarBrands()
 
+    def get_brand_from_title(self, parsed, url):
+        try:
+            title = self.get_title(parsed, url)
+        except NoAdTitleException as e:
+            return None
+        words = title.split(' ')
+        for word in words:
+            if word.lower() in self.car_brands:
+                return self.car_brands[word.lower()]
+        raise NoCarBrandException(title)
+
     def get_all_ads_filter(self, min_price=None, max_price=None, min_year=None, max_year=None,
         max_kms=None, ignore_out=True, asc_by_time=True):
         '''
@@ -147,18 +166,38 @@ class CarOLXScraper(OLXScraper):
         return info
 
 
-    
-
-    async def get_add_info(self,url,client):
-        '''
-        TODO: 
-        1. filtros para descricoes
-        ou nao
-        2. decidir se criamos o cliente antes, ou se abrimos um novo quando vamos ver os urls
-        '''
-        response = await client.get(url,headers=OLXScraper.header)
+    async def get_ad_info(self,url,client,i,info):
+        response = await client.get(self.olx_url+url,headers=OLXScraper.header)
         soup = bsoup(response.content, "html.parser")
         parsed = etree.HTML(str(soup))
+        try:
+            brand = self.get_brand_from_title(parsed,url)
+        except NoCarBrandException as e:
+            return
+        labels_info = self.get_labels_info(parsed)
+        info[i].insert_info(brand,labels_info[2],labels_info[0],url,labels_info[1])
+        
+    
+    async def _get_async_ads_info(self, urls):
+        size = len(urls)
+        print(size)
+        all_info = [CarAd('olx')]*size
+        async with httpx.AsyncClient() as client:
+            i=0
+            for url in urls:
+                print(i)
+                await self.get_ad_info(url,client,i,all_info)
+                i+=1
+        return all_info
+
+    def get_ads_info(self, min_price=None, max_price=None, min_year=None, max_year=None,
+    max_kms=None, ignore_out=True, asc_by_time=True):
+        urls = self.get_all_ads_filter(min_price, max_price, min_year, max_year,
+            max_kms, ignore_out, asc_by_time)
+        info = asyncio.run(self._get_async_ads_info(urls))
+
+        
+        
 
 
 
