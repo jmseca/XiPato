@@ -10,7 +10,7 @@ import asyncio
 import httpx
 
 from CarBrands import *
-from Exceptions import *
+from scrapers.exceptions import *
 from Entities import *
 
 
