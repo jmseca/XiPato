@@ -4,10 +4,6 @@ Author: João Fonseca
 Date: 31 July 2022
 '''
 
-from wsgiref.handlers import CGIHandler
-from flask import Flask
-from flask import render_template, request
-
 import psycopg2
 import psycopg2.extras
 import os
@@ -16,6 +12,8 @@ from time import sleep
 from exceptions import *
 
 class XiPatoUser:
+
+    basedir = os.path.abspath(os.path.dirname(__file__))
 
     def __init__(self, host, user, pword):
         self.connection_string = f'host={host} dbname={user} user={user} password={pword}'
@@ -26,13 +24,20 @@ class XiPatoUser:
         except:
             raise DBFailedConnectionException()
 
+    def get_query_from_file(self, filename):
+        query_file_pre = os.path.join(self.basedir, f"queries/{filename}")
+        query_file = open(query_file_pre,"r")
+        query = query_file.read()
+        query_file.close()
+        return query
+
     def commit_close(self, conn, cursor):
         conn.commit()
         cursor.close()
         conn.close()
 
     def update_sold_ad(self, conn, cursor, ad):
-        pass    
+        pass
 
     def update_sold(self, *new_sold, max_retries=10):
         '''
