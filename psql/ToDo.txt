@@ -1,0 +1,1 @@
+Trigger para identificar possiveis anuncios repetidos em sites diferentes.
