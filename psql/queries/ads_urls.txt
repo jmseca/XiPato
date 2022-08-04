@@ -1,0 +1,2 @@
+select ad_url
+from car_ad;

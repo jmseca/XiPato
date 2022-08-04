@@ -15,8 +15,9 @@ class XiPatoUser:
 
     basedir = os.path.abspath(os.path.dirname(__file__))
 
-    def __init__(self, host, user, pword):
+    def __init__(self, host, user, pword, max_retries=10):
         self.connection_string = f'host={host} dbname={user} user={user} password={pword}'
+        self.max_retries=max_retries
         try:
             dbConn = psycopg2.connect(self.connection_string)
             dbConn.close()
@@ -36,21 +37,43 @@ class XiPatoUser:
         cursor.close()
         conn.close()
 
-    def update_sold_ad(self, conn, cursor, ad):
-        pass
+    def get_ads_urls(self):
+        tried,done = 0,False
+        while (tried<self.max_retries) and not(done):
+            try:
+                dbConn = psycopg2.connect(self.connection_string)
+                cursor = dbConn.cursor(cursor_factory = psycopg2.extras.DictCursor)
+                cursor.execute(self.get_query_from_file('ads_urls.txt'))
+                done = True
+            except:
+                tried+=1
+                sleep(2)
+            finally:
+                self.commit_close(dbConn,cursor)   
+        if tried==10:
+            raise DBMaxRetriesExceededException('getting ads\' urls')
+        else:
+            return [url for url in cursor.fetchall()]
 
-    def update_sold(self, *new_sold, max_retries=10):
+    def update_sold_ad(self, cursor, ad):
+        #data = (ad.car_id, ad.)
+        #cursor.execute()
+        pass
+        
+
+    def update_sold(self, *new_sold ):
         '''
         Updates DB when ads ae sold
         '''
         if new_sold!=():
             tried,done = 0,False
-            while (tried<10) and not(done):
+            while (tried<self.max_retries) and not(done):
                 try:
                     dbConn = psycopg2.connect(self.connection_string)
                     cursor = dbConn.cursor(cursor_factory = psycopg2.extras.DictCursor)
+                    cursor.execute('start transaction;')
                     for ad in new_sold:
-                        self.update_sold_ad(dbConn,cursor,ad)
+                        self.update_sold_ad(cursor,ad)
                     done = True
                 except:
                     tried+=1

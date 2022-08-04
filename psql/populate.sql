@@ -53,11 +53,9 @@ create table sold (
     car_id      decimal(9,0),
     price       decimal(7,2),
     days_online decimal(4,0),
-    site_name   varchar(20),
     year        decimal(4,0),
     kms         decimal(9,0),
     count       decimal(6,0),
     foreign key(car_id) references car(car_id),
-    foreign key(site_name) references website(site_name),
-    primary key(car_id, price, days_online, site_name, year, kms, count)
+    primary key(car_id, price, days_online, year, kms, count)
 );

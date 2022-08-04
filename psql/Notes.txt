@@ -1,0 +1,3 @@
+Não vou adicionar site_name ao sold, pq podem haver anuncios repetidos em vários sites e nao 
+quero entradas duplicadas.
+Para alem disso, penso criar conta em todos os sites que andar a "scrapar", e colocar em todos anuncios dos meus carros
