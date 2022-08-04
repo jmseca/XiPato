@@ -9,7 +9,7 @@ import psycopg2.extras
 import os
 from time import sleep
 
-from exceptions import *
+from .exceptions import *
 
 class XiPatoUser:
 
@@ -56,14 +56,13 @@ class XiPatoUser:
             return [url for url in cursor.fetchall()]
 
     def update_sold_ad(self, cursor, ad):
-        #data = (ad.car_id, ad.)
-        #cursor.execute()
-        pass
+        data = (ad.url,)
+        cursor.execute(self.get_query_from_file('ad_sold.txt'), data)
         
 
     def update_sold(self, *new_sold ):
         '''
-        Updates DB when ads ae sold
+        Updates DB when ads are sold
         '''
         if new_sold!=():
             tried,done = 0,False

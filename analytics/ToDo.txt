@@ -1,0 +1,2 @@
+Probabilidade + Estatística para criar um modelo que devolva um preco medio dos carros vendidos
+Por car_id, kms, year, (e se calhar junto combustivel e cilindrada), mas estes ainda esta todo

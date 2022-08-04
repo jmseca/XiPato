@@ -1,0 +1,19 @@
+ADS to check if are sold
+To know what response i get when an ad is sold 
+
+SV --------------------------
+
+https://www.standvirtual.com/anuncio/renault-captur-1-5-dci-sport-ID8P8p67.html
+https://www.standvirtual.com/anuncio/renault-captur-0-9-tce-zen-ID8PiYzo.html
+
+
+OLX -------------------------
+
+https://www.olx.pt/d/anuncio/mercedes-benz-e-200-IDHgywI.html
+https://www.olx.pt/d/anuncio/vendo-saxo-com-137-mil-IDHgu0t.html
+
+PP --------------------------
+
+https://www.piscapisca.pt/carros/usados/mercedes-benz-classe-e-e-200-cabriolet-gasolina/bKOYB
+https://www.piscapisca.pt/carros/usados/rover-600-620-di-diesel/BADqb
+https://www.piscapisca.pt/carros/usados/fiat-punto-55-1.1-fire-gasolina/eRxzm

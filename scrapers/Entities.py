@@ -9,6 +9,7 @@ class CarAd:
         self.site = site
         self.brand = brand
         self.model = model
+        self.price = 10**6
         self.kms = kms
         self.url = url
         self.year = year

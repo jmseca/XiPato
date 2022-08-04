@@ -22,7 +22,6 @@ CREATE OR REPLACE FUNCTION move_ad_to_sold () RETURNS TRIGGER AS
         ELSE
             SELECT EXTRACT(DAT FROM (NOW() - OLD.days_online)) INTO ad_days_online;
             INSERT INTO sold values (OLD.car_id, OLD.price, ad_days_online, OLD.year, OLD.kms, 1);
-            car_id, price, days_online, year, kms, count
         END IF;
         RETURN OLD;
     END;
@@ -52,9 +51,9 @@ CREATE OR REPLACE FUNCTION check_for_repeated_ad () RETURNS TRIGGER AS
         END LOOP;
         IF (control_var = 0)
         THEN
-            RETURN NEW
+            RETURN NEW;
         ELSE
-            RETURN NULL
+            RETURN NULL;
         END IF;
     END;
     $$ LANGUAGE plpgsql;

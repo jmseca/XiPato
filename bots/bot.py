@@ -6,10 +6,10 @@ Date: 12 July 2022
 
 import time
 import requests
-from ads import *
-from commands.command import *
-from classex import *
-from utils import *
+from .ads import *
+from .commands.command import *
+from .classex import *
+from .utils import *
 
 
 class TelBot:

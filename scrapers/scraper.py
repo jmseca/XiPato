@@ -9,9 +9,9 @@ from lxml import etree
 import asyncio
 import httpx
 
-from CarBrands import *
-from scrapers.exceptions import *
-from Entities import *
+from .CarBrands import *
+from .exceptions import *
+from .Entities import *
 
 
 class AdScraperWithPages:
